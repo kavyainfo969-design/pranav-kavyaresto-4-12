@@ -1,0 +1,10 @@
+{
+  "name": "kavyaresto-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd Frontend && npm install && npm run build",
+    "build:frontend": "cd Frontend && npm install && npm run build",
+    "start": "node Backend/index.js"
+  }
+}
