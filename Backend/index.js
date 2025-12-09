@@ -7,10 +7,28 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware - temporarily allow all origins while debugging CORS on Render.
-// WARNING: permissive setting for testing only. Replace with an allowlist
-// (using FRONTEND_PROD_ORIGIN / FRONTEND_ORIGIN env vars) before production.
-app.use(cors());
+// Middleware - configure CORS based on env var.
+// If ALLOW_ALL_ORIGINS=true the server will allow any origin (useful for testing).
+// Otherwise we build an allowlist from FRONTEND_ORIGIN and FRONTEND_PROD_ORIGIN.
+const allowAll = String(process.env.ALLOW_ALL_ORIGINS || '').toLowerCase() === 'true'
+if (allowAll) {
+  console.log('CORS: allowing all origins (ALLOW_ALL_ORIGINS=true)')
+  app.use(cors())
+} else {
+  const allowedOrigins = [process.env.FRONTEND_ORIGIN, process.env.FRONTEND_PROD_ORIGIN].filter(Boolean)
+  console.log('CORS: using allowlist for origins:', allowedOrigins)
+  const corsOptions = {
+    origin: function (origin, callback) {
+      // Allow non-browser requests (curl, server-to-server) when origin is undefined
+      if (!origin) return callback(null, true)
+      if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true)
+      return callback(new Error('Not allowed by CORS'))
+    },
+    credentials: true
+  }
+  app.use(cors(corsOptions))
+}
+
 app.use(bodyParser.json())
 
 // Note: cors middleware is applied globally above. Explicit `app.options('*', ...)`
